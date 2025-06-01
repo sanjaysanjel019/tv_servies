@@ -1,42 +1,57 @@
-What is the primary function of the transformers library in this automated subtitle theme classification process?
-The transformers library is essential for leveraging powerful pre-trained machine learning models. In this context, its primary function is to load and utilize a specific pre-trained model, "facebook/bart-large-mnli", within a zero-shot-classification pipeline. This pipeline allows the system to classify text into predefined themes without requiring explicit training data for those specific themes.
+Automated Subtitle Theme Classification – Key Notes
+1. What is the primary function of the transformers library in this process?
 
-How is the subtitle data processed from the raw .ass files into a usable script format?
-The process involves several steps:
+The transformers library is essential for leveraging powerful pre-trained machine learning models. Here, its primary function is to load and utilize a specific pre-trained model, "facebook/bart-large-mnli", for zero-shot classification of subtitle themes.
+2. How is subtitle data processed from raw .ass files into a usable script format?
 
-Locating files: The glob module is used to find all .ass files within a specified directory.
-Reading lines: Each .ass file is opened and read line by line.
-Skipping metadata: Initial lines of the file, assumed to contain metadata rather than dialogue, are skipped.
-Extracting script content: For the remaining lines, the relevant script content is extracted by splitting the line by commas and joining the parts from the ninth element onwards.
-Cleaning text: Newline characters (\N) embedded in the script are replaced with spaces to create a continuous text string.
-Consolidating into DataFrame: The extracted and cleaned script for each file, along with its corresponding episode number (extracted from the filename), is added to a pandas DataFrame.
-What is the role of the sent_tokenize function from the nltk library in this process?
-The sent_tokenize function is used to split the entire script text of an episode into individual sentences. This is a crucial step because the zero-shot classification model processes text in smaller units (sentences or batches of sentences) rather than the entire script as a single input.
+The process involves:
 
-Explain the concept of "script batches" and why they are created.
-Script batches are created by grouping a fixed number of individual sentences together into larger strings. This is done to manage the input size for the theme classifier model. Instead of sending each individual sentence to the model, sentences are combined into batches (in this case, batches of 20 sentences), which can improve processing efficiency and potentially capture broader contextual themes within a limited scope.
+    Locating files: Using glob to find all .ass files in a directory.
+    Reading lines: Opening and reading each file line by line.
+    Skipping metadata: Skipping initial lines presumed to be metadata.
+    Extracting script content: Splitting each line by commas and joining parts from the ninth element onward.
+    Cleaning text: Replacing newline characters (\N) with spaces.
+    Consolidating: Storing cleaned scripts and episode numbers (from filenames) in a pandas DataFrame.
 
-How is the zero-shot-classification pipeline initialized and configured for theme analysis?
-The zero-shot-classification pipeline is initialized using the pipeline function from the transformers library. It's configured by specifying:
+3. What is the role of sent_tokenize from the nltk library?
 
-The task: "zero-shot-classification"
-The pre-trained model: model="facebook/bart-large-mnli"
-The computing device: device=device (which is determined based on whether a GPU is available). The theme_list variable, containing the candidate themes, is then provided as input to this pipeline during the classification process.
-What is the purpose of the theme_list variable?
-The theme_list variable contains a list of strings, where each string represents a potential theme (e.g., "friendship", "hope", "sacrifice"). This list serves as the set of candidate labels that the zero-shot-classification model will use to evaluate and score each sentence or batch of sentences from the subtitle script. The model determines the likelihood of each theme being present in the input text.
+The sent_tokenize function splits the full script text of an episode into individual sentences. This is crucial because the zero-shot classification model processes text in smaller, manageable chunks.
+4. What are "script batches" and why are they created?
 
-How are the theme inference results from the model output processed to calculate average theme scores per episode?
-The model outputs a list of dictionaries, where each dictionary contains the predicted labels (themes) and their corresponding scores for a given script batch. To get average scores per episode:
+    Script batches are groups of a fixed number of sentences combined into a single string.
+    Purpose: To manage input size for the classifier. Instead of sending the entire script at once, it is processed in manageable batches.
 
-A dictionary (themes) is used to accumulate scores for each theme across all batches in an episode.
-The code iterates through the theme_output for an episode. For each batch's results, it iterates through the labels and scores.
-If a theme is encountered for the first time, a new list for that theme is created in the themes dictionary.
-The score for the current theme in the batch is appended to its corresponding list in the themes dictionary.
-After processing all batches for an episode, the average score for each theme is calculated by taking the mean of the scores in its list within the themes dictionary.
-What does the final pandas DataFrame df contain after the theme classification process is complete?
-The final DataFrame df contains the following information for each analyzed subtitle file (representing an episode):
+5. How is the zero-shot-classification pipeline initialized and configured?
 
-episode: The episode number, extracted during the data loading process.
-script: The full, cleaned script text for that episode.
-Columns for each theme in the theme_list: These columns contain the calculated average score for each respective theme across the entire script of that episode. This allows for a quantitative assessment of the prevalence of different themes in each episode.
-NotebookLM can be inaccurate; please double check its responses.
+    Initialization: With the pipeline function from transformers.
+    Configuration:
+        Task: "zero-shot-classification"
+        Model: "facebook/bart-large-mnli"
+        Computing device: device=device (automatically uses GPU if available)
+        Themes: theme_list (candidate themes) provided as input labels.
+
+6. What is the purpose of the theme_list variable?
+
+    theme_list contains strings representing potential themes (e.g., "friendship", "hope", "sacrifice").
+    It serves as candidate labels for the classification model to detect within the subtitle scripts.
+
+7. How are theme inference results processed to calculate average scores per episode?
+
+    Model outputs a list of dictionaries for each batch, each with predicted labels (themes) and scores.
+    Steps:
+        Use a dictionary to accumulate theme scores for each batch in an episode.
+        For each batch, append scores to the corresponding theme's list.
+        After processing all batches, calculate the average score for each theme.
+
+8. What does the final pandas DataFrame (df) contain after classification?
+
+For each subtitle file (episode), the DataFrame contains:
+
+    episode: Episode number.
+    script: Full, cleaned script text.
+    Theme columns: Each column corresponds to a theme in theme_list and contains the average score for that theme.
+
+This allows for a quantitative assessment of thematic presence per episode.
+
+    Note: NotebookLM can be inaccurate; please double-check its responses.
+
